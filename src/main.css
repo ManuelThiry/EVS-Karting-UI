@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+h2 {
+  @apply text-2xl;
+}
+
+h1,
+h2,
+h3 {
+  @apply font-bold text-[#009FE3];
+}
+
+span {
+  @apply text-gray-300;
+}
+
+html,
+body {
+  @apply scrollbar scrollbar-thin scrollbar-thumb-[#009FE3]/50 scrollbar-track-[#0A0F1F]/30;
+  background-color: #0A0F1F;
+}
