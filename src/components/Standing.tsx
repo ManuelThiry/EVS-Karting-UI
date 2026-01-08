@@ -13,11 +13,8 @@ export const Standing = () => {
       return { driverRows: [], raceColumns: [] };
     }
 
-    // Trie les courses par id croissant
-    const sortedRaces = [...races].sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0));
-
     const allDriversSet = new Set<string>();
-    sortedRaces.forEach((race: any) => {
+    races.forEach((race: any) => {
       let drivers: string[] = [];
       if (Array.isArray(race.drivers)) {
         drivers = race.drivers;
@@ -28,7 +25,7 @@ export const Standing = () => {
     });
     const allDrivers = Array.from(allDriversSet);
 
-    const raceColumns = sortedRaces.map((race: any) => {
+    const raceColumns = races.map((race: any) => {
       let label = "TBD";
       if (race.track?.name && race.track.name.trim()) {
         label = race.track.name.substring(0, 3).toUpperCase();
@@ -43,7 +40,7 @@ export const Standing = () => {
     const driverRows = allDrivers.map((driver) => {
       let total = 0;
       const pointsByRace: Record<string, number | string> = {};
-      sortedRaces.forEach((race: any) => {
+      races.forEach((race: any) => {
         let parsedResults: any = {};
         if (race?.results) {
           if (typeof race.results === "string") {

@@ -9,9 +9,7 @@ export const Schedule = () => {
   const [countdown, setCountdown] = useState<string>("");
 
   const now = new Date();
-  const racesArray = Array.isArray(data)
-    ? [...data].sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0))
-    : [];
+  const racesArray = Array.isArray(data) ? data : [];
   const nextRace = racesArray
     .filter((race: any) => race.date)
     .map((race: any) => ({ ...race, dateObj: new Date(race.date) }))
