@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 
 export function useRaceQuery(id?: string | number) {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
   const url = id
-    ? `http://localhost:5000/api/Race/${id}`
-    : "http://localhost:5000/api/Race";
+    ? `${baseUrl}/api/Race/${id}`
+    : `${baseUrl}/api/Race`;
 
   const {
     data,
