@@ -27,6 +27,7 @@ export const Results: React.FC = () => {
     ? parsedResults.Qualif.map((item: any) => ({
         position: item.Position,
         name: item.Name,
+        team: item.Team && item.Team.trim() !== "" ? item.Team : "-",
         time: item.Time,
       }))
     : [];
@@ -34,6 +35,7 @@ export const Results: React.FC = () => {
     ? parsedResults.Race.map((item: any) => ({
         position: item.Position,
         name: item.Name,
+        team: item.Team && item.Team.trim() !== "" ? item.Team : "-",
         gap: item.Gap,
       }))
     : [];
@@ -41,12 +43,14 @@ export const Results: React.FC = () => {
   const qualifColumns: Column<any>[] = [
     { key: "position", label: "#", align: "left" },
     { key: "name", label: "Driver", align: "left" },
+    { key: "team", label: "Team", align: "left" },
     { key: "time", label: "Time", align: "right" },
   ];
 
   const raceColumns: Column<any>[] = [
     { key: "position", label: "#", align: "left" },
     { key: "name", label: "Driver", align: "left" },
+    { key: "team", label: "Team", align: "left" },
     { key: "gap", label: "Gap", align: "right" },
   ];
 
