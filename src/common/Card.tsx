@@ -41,7 +41,7 @@ export const Card: React.FC<CardProps> & {
       )}
       <div className="flex-1 min-h-0 flex flex-col">
         <ScrollBar>
-              <div className="relative min-h-0 h-full max-h-[70vh] bg-[#0A0F1F]/60">
+              <div className="relative min-h-0 h-full max-h-[65vh] bg-[#0A0F1F]/60">
             {children}
           </div>
         </ScrollBar>
