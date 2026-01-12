@@ -10,6 +10,8 @@ export const Results: React.FC = () => {
   const [view, setView] = useState<'qualif' | 'race'>('race');
 
 
+
+  // Parse results from the received JSON structure
   let parsedResults: any = {};
   if (race?.results) {
     if (typeof race.results === 'string') {
@@ -23,34 +25,62 @@ export const Results: React.FC = () => {
     }
   }
 
-  const qualifData = Array.isArray(parsedResults.Qualif)
-    ? parsedResults.Qualif.map((item: any) => ({
-        position: item.Position,
-        name: item.Name,
-        team: item.Team && item.Team.trim() !== "" ? item.Team : "-",
-        time: item.Time,
+  // Handle both camelCase and PascalCase keys, and fallback to user JSON
+  const qualifRaw = parsedResults.qualif || parsedResults.Qualif || parsedResults.qualifying || [];
+  const raceRaw = parsedResults.race || parsedResults.Race || [];
+
+  const qualifData = Array.isArray(qualifRaw)
+    ? qualifRaw.map((item: any) => ({
+        position: item.position ?? item.Position,
+        name: item.name ?? item.Name,
+        team: item.team && item.team.trim() !== "" ? item.team : (item.Team && item.Team.trim() !== "" ? item.Team : "-"),
+        time: item.time ?? item.Time,
       }))
     : [];
-  const raceData = Array.isArray(parsedResults.Race)
-    ? parsedResults.Race.map((item: any) => ({
-        position: item.Position,
-        name: item.Name,
-        team: item.Team && item.Team.trim() !== "" ? item.Team : "-",
-        gap: item.Gap,
+
+  const raceData = Array.isArray(raceRaw)
+    ? raceRaw.map((item: any) => ({
+        position: item.position ?? item.Position,
+        name: item.name ?? item.Name,
+        team: item.team && item.team.trim() !== "" ? item.team : (item.Team && item.Team.trim() !== "" ? item.Team : "-"),
+        gap: item.gap ?? item.Gap,
+        bestLap: item.bestLap ?? item.BestLap ?? item.bestlap ?? "",
       }))
     : [];
 
   const qualifColumns: Column<any>[] = [
     { key: "position", label: "#", align: "left" },
     { key: "name", label: "Driver", align: "left" },
-    { key: "team", label: "Team", align: "left" },
+    { key: "team", label: "Team", align: "center" },
     { key: "time", label: "Time", align: "right" },
   ];
+
+  const bestLapValue = raceData.reduce((best: string, curr: any) => {
+    if (!curr.bestLap) return best;
+    if (!best) return curr.bestLap;
+    const toMs = (t: string) => {
+      const [min, sec] = t.split(":");
+      const [s, ms] = sec.split(".");
+      return parseInt(min) * 60000 + parseInt(s) * 1000 + parseInt(ms.padEnd(3, '0'));
+    };
+    return toMs(curr.bestLap) < toMs(best) ? curr.bestLap : best;
+  }, "");
 
   const raceColumns: Column<any>[] = [
     { key: "position", label: "#", align: "left" },
     { key: "name", label: "Driver", align: "left" },
-    { key: "team", label: "Team", align: "left" },
+    { key: "team", label: "Team", align: "center" },
+    {
+      key: "bestLap",
+      label: "Best Lap",
+      align: "right",
+      render: (row: any) =>
+        row.bestLap === bestLapValue && bestLapValue ? (
+          <span style={{ color: "#009FE3", fontWeight: 600 }}>{row.bestLap}</span>
+        ) : (
+          row.bestLap
+        ),
+    },
     { key: "gap", label: "Gap", align: "right" },
   ];
 
