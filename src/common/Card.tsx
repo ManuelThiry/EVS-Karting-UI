@@ -9,7 +9,7 @@ type CardProps = {
 };
 
 type CardHeaderProps = {
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
   className?: string;
 };

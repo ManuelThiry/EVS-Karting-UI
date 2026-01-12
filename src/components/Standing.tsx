@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import { Card } from "../common/Card";
 import { Table, type Column } from "../common/Table";
+import { Tooltip } from "../common/Tooltip";
 import { useRaceQuery } from "../api/useRaceQuery";
 
 
 export const POINTS_PER_POSITION = [25, 22, 20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
 export const POINTS_PER_QUALIF = [4, 3, 2, 1];
+export const RACE_COUNT =  4;
 
 export const Standing = () => {
   const { data: races, loading, error } = useRaceQuery();
@@ -112,7 +114,7 @@ export const Standing = () => {
       const bestResults = pointsArray
         .filter((p) => typeof p.value === 'number' && p.value > 0)
         .sort((a, b) => b.value - a.value)
-        .slice(0, 4);
+        .slice(0, RACE_COUNT);
       const bestKeys = new Set(bestResults.map((p) => p.key));
       const total = bestResults.reduce((acc, p) => acc + p.value, 0);
       return {
@@ -139,20 +141,17 @@ export const Standing = () => {
         }
       }
       const raceArr = Array.isArray(parsedResults.race) ? parsedResults.race : (Array.isArray(parsedResults.Race) ? parsedResults.Race : []);
-      // Pour chaque équipe, on collecte les points des pilotes sur cette course
       const teamToPoints: Record<string, number[]> = {};
       raceArr.forEach((r: any) => {
         const name = r.Name ?? r.name;
         const team = driverTeamMap.get(name);
         if (team && team.trim() !== "") {
-          // Points course
           let pts = 0;
           const pos = r.Position ?? r.position;
           if (typeof pos === "number") {
             const idx = pos - 1;
             pts = POINTS_PER_POSITION[idx] ?? 0;
           }
-          // Points qualif
           let qualifPts = 0;
           const qualifArr = Array.isArray(parsedResults.qualif) ? parsedResults.qualif : (Array.isArray(parsedResults.Qualif) ? parsedResults.Qualif : []);
           const qualifObj = qualifArr.find((q: any) => (q.Name ?? q.name) === name);
@@ -160,7 +159,6 @@ export const Standing = () => {
           if (qualifObj && typeof qualifPos === "number" && qualifPos >= 1 && qualifPos <= POINTS_PER_QUALIF.length) {
             qualifPts = POINTS_PER_QUALIF[qualifPos - 1] ?? 0;
           }
-          // Bonus best lap
           let bestLapBonus = 0;
           let bestLapValue = null;
           if (raceArr.length > 0) {
@@ -186,7 +184,6 @@ export const Standing = () => {
           teamToPoints[team].push(totalPoints);
         }
       });
-      // Pour chaque équipe, on calcule la moyenne sur cette course
       Object.entries(teamToPoints).forEach(([team, arr]) => {
         const avg = arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
         if (!teamRacePoints[team]) teamRacePoints[team] = [];
@@ -194,7 +191,6 @@ export const Standing = () => {
       });
     });
 
-    // Pour chaque équipe, on prend les 4 meilleures moyennes
     const teamRows = Object.entries(teamRacePoints).map(([team, arr]) => {
       const bestResults = arr
         .filter((p) => typeof p.value === 'number' && p.value > 0)
@@ -202,7 +198,6 @@ export const Standing = () => {
         .slice(0, 4);
       const bestKeys = new Set(bestResults.map((p) => p.key));
       const total = bestResults.reduce((acc, p) => acc + p.value, 0);
-      // On construit l'objet pour le tableau
       const pointsByRace: Record<string, number | string> = {};
       arr.forEach((p) => {
         pointsByRace[p.key] = p.value > 0 ? Math.round(p.value * 100) / 100 : "-";
@@ -218,7 +213,6 @@ export const Standing = () => {
     return { driverRows, raceColumns, teamRows };
   }, [races]);
 
-  // Custom render pour mettre en bleu les courses qui comptent
   const driverColumns: Column<any>[] = [
     { key: "position", label: "#", align: "left" },
     { key: "name", label: "Driver", align: "left" },
@@ -236,7 +230,6 @@ export const Standing = () => {
     { key: "total", label: "Total", align: "center" },
   ];
 
-  // Custom render pour mettre en bleu les courses qui comptent pour l'équipe
   const teamColumns: Column<any>[] = [
     { key: "position", label: "#", align: "left" },
     { key: "team", label: "Team", align: "left" },
@@ -292,7 +285,27 @@ export const Standing = () => {
       </div>
       {view === 'driver' && (
         <Card>
-          <Card.Header title="Driver Standings" />
+          <Card.Header 
+            title={
+              <span className="flex items-center gap-2">
+                Driver Standings
+                <Tooltip content={
+                  <div>
+                    <b className="text-[#009FE3]">Scoring rules</b><br />
+                    <span>The total is the sum of each driver's <b>{RACE_COUNT} best performances</b> (race + qualifying + fastest lap).</span><br /><br />
+                    <b className="text-[#009FE3]">Points per race position:</b><br />
+                    <span className="block mb-1">{POINTS_PER_POSITION.map((p, i) => `${i+1}: ${p}`).join(' | ')}</span>
+                    <b className="text-[#009FE3]">Points per qualifying position:</b><br />
+                    <span className="block mb-1">{POINTS_PER_QUALIF.map((p, i) => `${i+1}: ${p}`).join(' | ')}</span>
+                    <b className="text-[#009FE3]">Fastest lap bonus:</b> <span>+1 point</span><br /><br />
+                    <span className="text-[#009FE3]">Blue columns</span> are those that count for the total.
+                  </div>
+                }>
+                  <span className="text-[#009FE3] text-xl px-2 py-1 cursor-pointer font-bold" style={{display:'inline-block'}}>?</span>
+                </Tooltip>
+              </span>
+            }
+          />
           <Card.Content>
             <Table columns={driverColumns} data={sortedDriverRows} />
           </Card.Content>
@@ -300,7 +313,26 @@ export const Standing = () => {
       )}
       {view === 'team' && (
         <Card>
-          <Card.Header title="Team Standings" />
+          <Card.Header 
+            title={
+              <span className="flex items-center gap-2">
+                Team Standings
+                <Tooltip content={
+                  <div>
+                    <b className="text-[#009FE3]">Scoring rules</b><br />
+                    <span>The total is the sum of the team's <b>{RACE_COUNT} best averages per race</b> (average of the team's drivers' points for each race).</span><br /><br />
+                    <b className="text-[#009FE3]">Points per race position:</b><br />
+                    <span className="block mb-1">{POINTS_PER_POSITION.map((p, i) => `${i+1}: ${p}`).join(' | ')}</span>
+                    <b className="text-[#009FE3]">Points per qualifying position:</b><br />
+                    <span className="block mb-1">{POINTS_PER_QUALIF.map((p, i) => `${i+1}: ${p}`).join(' | ')}</span>
+                    <b className="text-[#009FE3]">Fastest lap bonus:</b> <span>+1 point</span><br /><br />
+                    <span className="text-[#009FE3]">Blue columns</span> are those that count for the total.
+                  </div>
+                }>
+                  <span className="text-[#009FE3] text-xl px-2 py-1 cursor-pointer font-bold" style={{display:'inline-block'}}>?</span>    </Tooltip>
+              </span>
+            }
+          />
           <Card.Content>
             <Table columns={teamColumns} data={sortedTeamRows} />
           </Card.Content>
