@@ -7,15 +7,16 @@ import { useRaceQuery } from "../api/useRaceQuery";
 
 export const POINTS_PER_POSITION = [25, 22, 20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
 export const POINTS_PER_QUALIF = [4, 3, 2, 1];
-export const RACE_COUNT =  4;
+export const RACE_COUNT =  5;
 
 export const Standing = () => {
   const { data: races, loading, error } = useRaceQuery();
   const [view, setView] = useState<'driver' | 'team'>('driver');
 
+  // Move useMemo for standings above its usage
   const standings = useMemo(() => {
     if (!Array.isArray(races)) {
-      return { driverRows: [], raceColumns: [] };
+      return { driverRows: [], raceColumns: [], teamRows: [] };
     }
 
     const driverTeamMap = new Map<string, string>();
@@ -74,19 +75,15 @@ export const Standing = () => {
         const posObj = raceArr.find((r: any) => (r.Name ?? r.name) === driver);
         let pts = 0;
         const pos = posObj?.Position ?? posObj?.position;
-        if (posObj && typeof pos === "number") {
-          const idx = pos - 1;
-          pts = POINTS_PER_POSITION[idx] ?? 0;
-        }
+        let qualifPts = 0;
+        let bestLapBonus = 0;
 
         const qualifObj = qualifArr.find((q: any) => (q.Name ?? q.name) === driver);
         const qualifPos = qualifObj?.Position ?? qualifObj?.position;
-        let qualifPts = 0;
         if (qualifObj && typeof qualifPos === "number" && qualifPos >= 1 && qualifPos <= POINTS_PER_QUALIF.length) {
           qualifPts = POINTS_PER_QUALIF[qualifPos - 1] ?? 0;
         }
 
-        let bestLapBonus = 0;
         let bestLapValue = null;
         if (raceArr.length > 0) {
           bestLapValue = raceArr.reduce((best: string|null, curr: any) => {
@@ -107,10 +104,36 @@ export const Standing = () => {
           }
         }
 
+        if (posObj && typeof pos === "number") {
+          const idx = pos - 1;
+          pts = POINTS_PER_POSITION[idx] ?? 0;
+        }
+
+        let displayValue = "-";
+        if (posObj) {
+          if (typeof pos === "number") {
+            if (pos >= 1 && pos <= POINTS_PER_POSITION.length) {
+              // Normal points
+              displayValue = pts + qualifPts + bestLapBonus > 0 ? String(pts + qualifPts + bestLapBonus) : "-";
+            } else if (pos > POINTS_PER_POSITION.length) {
+              // Present but beyond 20th place
+              displayValue = "0";
+            }
+          } else {
+            // Present but no valid position
+            displayValue = "0";
+          }
+        } else {
+          // Not present in race
+          displayValue = "-";
+        }
+
         const totalPoints = pts + qualifPts + bestLapBonus;
-        pointsByRace[`race_${race.id}`] = totalPoints > 0 ? totalPoints : "-";
-        pointsArray.push({ key: `race_${race.id}`, value: totalPoints, raceIdx });
+        pointsByRace[`race_${race.id}`] = displayValue;
+        pointsArray.push({ key: `race_${race.id}`, value: typeof displayValue === 'number' ? displayValue : totalPoints, raceIdx });
+
       });
+
       const bestResults = pointsArray
         .filter((p) => typeof p.value === 'number' && p.value > 0)
         .sort((a, b) => b.value - a.value)
@@ -199,8 +222,20 @@ export const Standing = () => {
       const bestKeys = new Set(bestResults.map((p) => p.key));
       const total = bestResults.reduce((acc, p) => acc + p.value, 0);
       const pointsByRace: Record<string, number | string> = {};
+      // Initialiser toutes les colonnes à '-'
+      (raceColumns || []).forEach(col => {
+        pointsByRace[col.key] = "-";
+      });
       arr.forEach((p) => {
-        pointsByRace[p.key] = p.value > 0 ? Math.round(p.value * 100) / 100 : "-";
+        if (p.value === undefined || p.value === null) {
+          pointsByRace[p.key] = "-";
+        } else if (p.value > 0) {
+          pointsByRace[p.key] = Math.round(p.value * 100) / 100;
+        } else if (p.value === 0) {
+          pointsByRace[p.key] = "0";
+        } else {
+          pointsByRace[p.key] = "-";
+        }
       });
       return {
         team,

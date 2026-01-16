@@ -5,6 +5,7 @@ export type Column<T> = {
   label: string;
   align?: "left" | "right" | "center";
   render?: (row: T) => React.ReactNode;
+  width?: number | string;
 };
 
 export type TableProps<T> = {
@@ -33,6 +34,7 @@ export function Table<T extends object>({
                     ? "text-center"
                     : "text-left"
                 }`}
+                style={col.width ? { width: typeof col.width === 'number' ? `${col.width}px` : col.width } : undefined}
               >
                 {col.label}
               </th>
@@ -56,6 +58,7 @@ export function Table<T extends object>({
                       ? "text-center"
                       : "text-left"
                   }`}
+                  style={col.width ? { width: typeof col.width === 'number' ? `${col.width}px` : col.width } : undefined}
                 >
                   {col.render ? col.render(row) : (row[col.key] as any)}
                 </td>

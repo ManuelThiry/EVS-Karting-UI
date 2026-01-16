@@ -13,7 +13,7 @@ const RaceDetail: React.FC = () => {
 
   return (
     <>
-      <div className="p-4 rounded-xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="p-2 rounded-xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2>{race.track?.name || "-"}</h2>
           <span>Date: {race.date ? new Date(race.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "TBD"}</span>

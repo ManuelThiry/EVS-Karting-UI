@@ -49,10 +49,10 @@ export const Results: React.FC = () => {
     : [];
 
   const qualifColumns: Column<any>[] = [
-    { key: "position", label: "#", align: "left" },
-    { key: "name", label: "Driver", align: "left" },
-    { key: "team", label: "Team", align: "center" },
-    { key: "time", label: "Time", align: "right" },
+    { key: "position", label: "#", align: "left", width: 5 },
+    { key: "name", label: "Driver", align: "left", width: 125 },
+    { key: "team", label: "Team", align: "center", width: 125 },
+    { key: "time", label: "Time", align: "right", width: 80 },
   ];
 
   const bestLapValue = raceData.reduce((best: string, curr: any) => {
@@ -67,13 +67,14 @@ export const Results: React.FC = () => {
   }, "");
 
   const raceColumns: Column<any>[] = [
-    { key: "position", label: "#", align: "left" },
-    { key: "name", label: "Driver", align: "left" },
-    { key: "team", label: "Team", align: "center" },
+    { key: "position", label: "#", align: "left", width: 10 },
+    { key: "name", label: "Driver", align: "left", width: 100 },
+    { key: "team", label: "Team", align: "center", width: 100 },
     {
       key: "bestLap",
       label: "Best Lap",
       align: "right",
+      width: 90,
       render: (row: any) =>
         row.bestLap === bestLapValue && bestLapValue ? (
           <span style={{ color: "#009FE3", fontWeight: 600 }}>{row.bestLap}</span>
@@ -81,7 +82,22 @@ export const Results: React.FC = () => {
           row.bestLap
         ),
     },
-    { key: "gap", label: "Gap", align: "right" },
+    { key: "gap", label: "Gap", align: "right", width: 70 },
+    {
+      key: "deltaPos",
+      label: "",
+      align: "right",
+      width: 1,
+      render: (row: any) => {
+        // Trouver la position de qualif pour ce pilote
+        const qualif = qualifData.find((q: any) => q.name === row.name);
+        if (!qualif || typeof qualif.position !== 'number' || typeof row.position !== 'number') return "";
+        const delta = qualif.position - row.position;
+        if (delta === 0) return "=";
+        if (delta > 0) return <span style={{ color: '#00FF00' }}>+{delta}</span>;
+        return <span style={{ color: '#E30000' }}>{delta}</span>;
+      }
+    },
   ];
 
   return (
