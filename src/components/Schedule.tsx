@@ -16,6 +16,22 @@ export const Schedule = () => {
     .filter((race: any) => race.dateObj > now)
     .sort((a: any, b: any) => a.dateObj.getTime() - b.dateObj.getTime())[0];
 
+  const getWinner = (race: any): string | null => {
+    if (!race?.results) return null;
+    let parsedResults: any = {};
+    try {
+      parsedResults = typeof race.results === 'string' ? JSON.parse(race.results) : race.results;
+    } catch {
+      return null;
+    }
+    const raceRaw = parsedResults.race || parsedResults.Race || [];
+    if (Array.isArray(raceRaw) && raceRaw.length > 0) {
+      const winner = raceRaw[0];
+      return winner.name || winner.Name || null;
+    }
+    return null;
+  };
+
   useEffect(() => {
     if (!nextRace) return;
     const updateCountdown = () => {
@@ -59,11 +75,25 @@ export const Schedule = () => {
             >
               <Card
                 imageUrl={race.track?.image}
-                topRight={isNext && countdown ? (
-                  <div className="absolute top-0 right-0 rounded-bl-md px-3 py-1 bg-black/70 min-w-[90px] flex items-center justify-end" style={{borderTopRightRadius: '0.75rem', borderBottomLeftRadius: '0.5rem'}}>
-                    <span className="font-mono text-xs text-[#009FE3] tracking-widest">{countdown}</span>
-                  </div>
-                ) : undefined}
+                topRight={(() => {
+                  const winner = getWinner(race);
+                  if (winner) {
+                    return (
+                      <div className="absolute top-0 right-0 rounded-bl-md px-3 py-1 bg-black/70 min-w-[90px] flex items-center justify-end gap-2" style={{borderTopRightRadius: '0.75rem', borderBottomLeftRadius: '0.5rem'}}>
+                          <span role="img" aria-label="trophy">🏆</span>
+                        <span className="text-xs text-white font-medium whitespace-nowrap">{winner}</span>
+                      </div>
+                    );
+                  }
+                  if (isNext && countdown) {
+                    return (
+                      <div className="absolute top-0 right-0 rounded-bl-md px-3 py-1 bg-black/70 min-w-[90px] flex items-center justify-end" style={{borderTopRightRadius: '0.75rem', borderBottomLeftRadius: '0.5rem'}}>
+                        <span className="font-mono text-xs text-[#009FE3] tracking-widest">{countdown}</span>
+                      </div>
+                    );
+                  }
+                  return undefined;
+                })()}
                 className="group-hover:scale-[1.02] group-hover:shadow-[0_0_30px_#009FE340] transition-transform duration-150"
               >
                 <Card.Header title={race.period || "-"} subtitle={race.track?.name || "-"} />
