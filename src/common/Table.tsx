@@ -1,10 +1,10 @@
 import React from "react";
 
 export type Column<T> = {
-  key: keyof T;
+  key: keyof T | string;
   label: string;
   align?: "left" | "right" | "center";
-  render?: (row: T) => React.ReactNode;
+  render?: (row: T, index: number) => React.ReactNode;
   width?: number | string;
 };
 
@@ -60,7 +60,7 @@ export function Table<T extends object>({
                   }`}
                   style={col.width ? { width: typeof col.width === 'number' ? `${col.width}px` : col.width } : undefined}
                 >
-                  {col.render ? col.render(row) : (row[col.key] as any)}
+                  {col.render ? col.render(row, index) : (col.key in row ? row[col.key as keyof T] as any : null)}
                 </td>
               ))}
             </tr>

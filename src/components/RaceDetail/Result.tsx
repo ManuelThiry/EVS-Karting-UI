@@ -53,6 +53,28 @@ export const Results: React.FC = () => {
     { key: "name", label: "Driver", align: "left", width: "5%" },
     { key: "team", label: "Team", align: "center", width: "10%" },
     { key: "time", label: "Time", align: "right", width: "10%" },
+    {
+      key: "gap",
+      label: "",
+      align: "right",
+      width: "0.5%",
+      render: (row: any, _idx: number) => {
+        if (_idx === 0) return "";
+        const bestTime = qualifData[0]?.time;
+        const thisTime = row.time;
+        if (!bestTime || !thisTime) return "";
+        const toMs = (t: string) => {
+          const [min, sec] = t.split(":");
+          const [s, ms] = sec.split(".");
+          return parseInt(min) * 60000 + parseInt(s) * 1000 + parseInt((ms||'0').padEnd(3, '0'));
+        };
+        const gapMs = toMs(thisTime) - toMs(bestTime);
+        if (gapMs <= 0) return "";
+        // Affiche le gap formaté
+        const sec = (gapMs / 1000).toFixed(3);
+        return <span>+{sec}</span>;
+      }
+    },
   ];
 
   const bestLapValue = raceData.reduce((best: string, curr: any) => {
