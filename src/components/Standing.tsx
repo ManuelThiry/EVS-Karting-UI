@@ -203,8 +203,11 @@ export const Standing = () => {
             }
           }
           const totalPoints = pts + qualifPts + bestLapBonus;
-          if (!teamToPoints[team]) teamToPoints[team] = [];
-          teamToPoints[team].push(totalPoints);
+          const teams = team.split('/').map(t => t.trim()).filter(t => t !== "");
+          teams.forEach(singleTeam => {
+            if (!teamToPoints[singleTeam]) teamToPoints[singleTeam] = [];
+            teamToPoints[singleTeam].push(totalPoints);
+          });
         }
       });
       Object.entries(teamToPoints).forEach(([team, arr]) => {
@@ -229,10 +232,8 @@ export const Standing = () => {
       arr.forEach((p) => {
         if (p.value === undefined || p.value === null) {
           pointsByRace[p.key] = "-";
-        } else if (p.value > 0) {
-          pointsByRace[p.key] = Math.round(p.value * 100) / 100;
-        } else if (p.value === 0) {
-          pointsByRace[p.key] = "0";
+        } else if (p.value >= 0) {
+          pointsByRace[p.key] = p.value.toFixed(2);
         } else {
           pointsByRace[p.key] = "-";
         }
@@ -240,7 +241,7 @@ export const Standing = () => {
       return {
         team,
         ...pointsByRace,
-        total: Math.round(total * 100) / 100,
+        total: total.toFixed(2),
         _bestKeys: bestKeys,
       };
     });
@@ -295,7 +296,7 @@ export const Standing = () => {
     }));
 
   const sortedTeamRows = [...(standings.teamRows || [])]
-    .sort((a, b) => b.total - a.total)
+    .sort((a, b) => Number(b.total) - Number(a.total))
     .map((row, idx) => ({
       position: idx + 1,
       team: row.team,
