@@ -63,10 +63,20 @@ export const Results: React.FC = () => {
         const bestTime = qualifData[0]?.time;
         const thisTime = row.time;
         if (!bestTime || !thisTime) return "";
-        const toMs = (t: string) => {
-          const [min, sec] = t.split(":");
-          const [s, ms] = sec.split(".");
-          return parseInt(min) * 60000 + parseInt(s) * 1000 + parseInt((ms||'0').padEnd(3, '0'));
+        const toMs = (t: string | undefined): number => {
+          if (!t) return Infinity;
+          const parts = t.split(":");
+          if (parts.length === 2) {
+            // Format: MM:SS.sss
+            const [min, sec] = parts;
+            const [s, ms] = sec.split(".");
+            return parseInt(min) * 60000 + parseInt(s) * 1000 + parseInt((ms || '0').padEnd(3, '0'));
+          } else if (parts.length === 1) {
+            // Format: SS.sss (moins d'une minute)
+            const [s, ms] = t.split(".");
+            return parseInt(s) * 1000 + parseInt((ms || '0').padEnd(3, '0'));
+          }
+          return Infinity;
         };
         const gapMs = toMs(thisTime) - toMs(bestTime);
         if (gapMs <= 0) return "";
@@ -77,14 +87,25 @@ export const Results: React.FC = () => {
     },
   ];
 
+  const toMs = (t: string | undefined): number => {
+    if (!t) return Infinity;
+    const parts = t.split(":");
+    if (parts.length === 2) {
+      // Format: MM:SS.sss
+      const [min, sec] = parts;
+      const [s, ms] = sec.split(".");
+      return parseInt(min) * 60000 + parseInt(s) * 1000 + parseInt((ms || '0').padEnd(3, '0'));
+    } else if (parts.length === 1) {
+      // Format: SS.sss (moins d'une minute)
+      const [s, ms] = t.split(".");
+      return parseInt(s) * 1000 + parseInt((ms || '0').padEnd(3, '0'));
+    }
+    return Infinity;
+  };
+
   const bestLapValue = raceData.reduce((best: string, curr: any) => {
     if (!curr.bestLap) return best;
     if (!best) return curr.bestLap;
-    const toMs = (t: string) => {
-      const [min, sec] = t.split(":");
-      const [s, ms] = sec.split(".");
-      return parseInt(min) * 60000 + parseInt(s) * 1000 + parseInt(ms.padEnd(3, '0'));
-    };
     return toMs(curr.bestLap) < toMs(best) ? curr.bestLap : best;
   }, "");
 
