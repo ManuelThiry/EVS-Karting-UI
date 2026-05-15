@@ -4,60 +4,46 @@ import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Table, type Column } from "../../common/Table";
 import { Card } from "../../common/Card";
+import { Drivers } from "../../api/Data";
 
 export const Results: React.FC = () => {
   const { race } = useOutletContext<any>();
   const [view, setView] = useState<'qualif' | 'race'>('race');
 
+  // Adapté à la structure statique : race.qualifResults et race.raceResults
+  const getTeam = (driverName: string): string => {
+    const driver = Drivers.find(d => d.name === driverName);
+    return driver?.team?.join(" / ") || "-";
+  };
 
-
-  // Parse results from the received JSON structure
-  let parsedResults: any = {};
-  if (race?.results) {
-    if (typeof race.results === 'string') {
-      try {
-        parsedResults = JSON.parse(race.results);
-      } catch (e) {
-        parsedResults = {};
-      }
-    } else {
-      parsedResults = race.results;
-    }
-  }
-
-  // Handle both camelCase and PascalCase keys, and fallback to user JSON
-  const qualifRaw = parsedResults.qualif || parsedResults.Qualif || parsedResults.qualifying || [];
-  const raceRaw = parsedResults.race || parsedResults.Race || [];
-
-  const qualifData = Array.isArray(qualifRaw)
-    ? qualifRaw.map((item: any) => ({
-        position: item.position ?? item.Position,
-        name: item.name ?? item.Name,
-        team: item.team && item.team.trim() !== "" ? item.team : (item.Team && item.Team.trim() !== "" ? item.Team : "-"),
-        time: item.time ?? item.Time,
+  const qualifData = Array.isArray(race?.qualifResults)
+    ? race.qualifResults.map((item: any) => ({
+        position: item.position,
+        name: item.driver,
+        team: getTeam(item.driver),
+        time: item.time,
       }))
     : [];
 
-  const raceData = Array.isArray(raceRaw)
-    ? raceRaw.map((item: any) => ({
-        position: item.position ?? item.Position,
-        name: item.name ?? item.Name,
-        team: item.team && item.team.trim() !== "" ? item.team : (item.Team && item.Team.trim() !== "" ? item.Team : "-"),
-        gap: item.gap ?? item.Gap,
-        bestLap: item.bestLap ?? item.BestLap ?? item.bestlap ?? "",
+  const raceData = Array.isArray(race?.raceResults)
+    ? race.raceResults.map((item: any) => ({
+        position: item.position,
+        name: item.driver,
+        team: getTeam(item.driver),
+        gap: item.gap,
+        bestLap: item.bestLap,
       }))
     : [];
 
   const qualifColumns: Column<any>[] = [
-    { key: "position", label: "#", align: "left", width: "1%" },
-    { key: "name", label: "Driver", align: "left", width: "5%" },
-    { key: "team", label: "Team", align: "center", width: "10%" },
-    { key: "time", label: "Time", align: "right", width: "10%" },
+    { key: "name", label: "Driver", align: "left", width: 80, sortable: true },
+    { key: "team", label: "Team", align: "center", width: 250, sortable: true },
+    { key: "time", label: "Time", align: "right", width: 100 },
     {
       key: "gap",
       label: "",
       align: "right",
-      width: "0.5%",
+      width: 15,
       render: (row: any, _idx: number) => {
         if (_idx === 0) return "";
         const bestTime = qualifData[0]?.time;
@@ -110,14 +96,14 @@ export const Results: React.FC = () => {
   }, "");
 
   const raceColumns: Column<any>[] = [
-    { key: "position", label: "#", align: "left", width: "1%" },
-    { key: "name", label: "Driver", align: "left", width: "5%" },
-    { key: "team", label: "Team", align: "center", width: "10%" },
+    { key: "name", label: "Driver", align: "left", width: 80, sortable: true },
+    { key: "team", label: "Team", align: "center", width: 250, sortable: true },
     {
       key: "bestLap",
       label: "Best Lap",
-      align: "right",
-      width: "10%",
+      align: "center",
+      width: 100,
+      sortable: true,
       render: (row: any) =>
         row.bestLap === bestLapValue && bestLapValue ? (
           <span style={{ color: "#009FE3", fontWeight: 600 }}>{row.bestLap}</span>
@@ -125,12 +111,25 @@ export const Results: React.FC = () => {
           row.bestLap
         ),
     },
-    { key: "gap", label: "Gap", align: "right", width: "5%" },
+    { key: "gap", label: "Gap", align: "right", width: 60 },
     {
       key: "deltaPos",
       label: "",
       align: "right",
-      width: "0.5%",
+      width: 10,
+      sortable: true,
+      // Tri numérique réel sur deltaPos, supporte l'ordre asc/desc
+      sortFunction: (a: any, b: any, order?: 'asc' | 'desc') => {
+        const qa = qualifData.find((q: any) => q.name === a.name);
+        const qb = qualifData.find((q: any) => q.name === b.name);
+        const deltaA = qa && typeof qa.position === 'number' && typeof a.position === 'number' ? qa.position - a.position : 0;
+        const deltaB = qb && typeof qb.position === 'number' && typeof b.position === 'number' ? qb.position - b.position : 0;
+        if (order === 'desc') {
+          return deltaA - deltaB;
+        } else {
+          return deltaB - deltaA;
+        }
+      },
       render: (row: any) => {
         const qualif = qualifData.find((q: any) => q.name === row.name);
         if (!qualif || typeof qualif.position !== 'number' || typeof row.position !== 'number') return "";
@@ -138,7 +137,7 @@ export const Results: React.FC = () => {
         if (delta === 0) return "=";
         if (delta > 0) return <span style={{ color: '#00FF00' }}>+{delta}</span>;
         return <span style={{ color: '#E30000' }}>{delta}</span>;
-      }
+      },
     },
   ];
 

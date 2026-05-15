@@ -1,21 +1,20 @@
 import React from "react";
 import { Outlet, Link, useLocation, useParams } from "react-router-dom";
-import { useRaceQuery } from "../../api/useRaceQuery";
+import { Races } from "../../api/Data";
 
 const RaceDetail: React.FC = () => {
   const location = useLocation();
   const { id } = useParams();
-  const { data: race, loading, error } = useRaceQuery(id);
 
-  if (loading) return <div>Loading…</div>;
-  if (error) return <div>Error: {error.message || error.toString()}</div>;
+  // Trouver la course par id dans Races
+  const race = Races.find(r => String(r.id) === String(id));
   if (!race) return <div>No data found.</div>;
 
   return (
     <>
       <div className="p-2 rounded-xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h2>{race.track?.name || "-"}</h2>
+          <h2>{race.name || "-"}</h2>
           <span>Date: {race.date ? new Date(race.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "TBD"}</span>
         </div>
 

@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { Card } from "../common/Card";
 import { Table, type Column } from "../common/Table";
 import { Tooltip } from "../common/Tooltip";
-import { useRaceQuery } from "../api/useRaceQuery";
+import { Races, Drivers } from "../api/Data";
+import type { Driver } from "../api/Data";
 
 
 export const POINTS_PER_POSITION = [25, 22, 20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
@@ -10,95 +11,66 @@ export const POINTS_PER_QUALIF = [4, 3, 2, 1];
 export const RACE_COUNT =  5;
 
 export const Standing = () => {
-  const { data: races, loading, error } = useRaceQuery();
+  const races = Races;
   const [view, setView] = useState<'driver' | 'team'>('driver');
 
-  // Move useMemo for standings above its usage
   const standings = useMemo(() => {
     if (!Array.isArray(races)) {
       return { driverRows: [], raceColumns: [], teamRows: [] };
     }
 
-    const driverTeamMap = new Map<string, string>();
-    races.forEach((race: any) => {
-      if (Array.isArray(race.drivers)) {
-        if (race.drivers.length > 0 && typeof race.drivers[0] === 'object' && ('name' in race.drivers[0] || 'Name' in race.drivers[0])) {
-          race.drivers.forEach((d: any) => {
-            const name = d.name ?? d.Name;
-            const team = d.team ?? d.Team ?? "";
-            driverTeamMap.set(name, team);
-          });
-        } else {
-          race.drivers.forEach((d: string) => {
-            driverTeamMap.set(d, "");
-          });
-        }
-      } else if (typeof race.drivers === "string") {
-        race.drivers.split(",").map((d: string) => d.trim()).filter(Boolean).forEach((d: string) => {
-          driverTeamMap.set(d, "");
-        });
-      }
-    });
-    const allDrivers = Array.from(driverTeamMap.keys());
+    // Map driver ID to driver object
+    const driverMap = new Map<string, Driver>();
+    Drivers.forEach((d: Driver) => driverMap.set(d.id, d));
 
-    const raceColumns = races.map((race: any) => {
+    // Get all driver IDs from all races
+    const allDriverIds = Array.from(new Set(races.flatMap((r: typeof Races[number]) => r.drivers || [])));
+
+    const raceColumns = races.map((race) => {
       let label = "TBD";
-      if (race.track?.name && race.track.name.trim()) {
-        label = race.track.name.substring(0, 3).toUpperCase();
+      if (race.name && race.name.trim()) {
+        label = race.name.substring(0, 3).toUpperCase();
       }
       return {
         key: `race_${race.id}`,
         label,
         align: "center" as const,
+        title: race.name || undefined,
       };
     });
 
-    const driverRows = allDrivers.map((driver) => {
+    const driverRows = allDriverIds.map((driverId: string) => {
+      const driver = driverMap.get(driverId);
+      const driverName = driver?.name || driverId;
+      const team = driver?.team?.join(" / ") || "-";
       const pointsByRace: Record<string, number | string> = {};
       const pointsArray: { key: string, value: number, raceIdx: number }[] = [];
-      races.forEach((race: any, raceIdx: number) => {
-        let parsedResults: any = {};
-        if (race?.results) {
-          if (typeof race.results === "string") {
-            try {
-              parsedResults = JSON.parse(race.results);
-            } catch (e) {
-              parsedResults = {};
-            }
-          } else {
-            parsedResults = race.results;
-          }
-        }
-        const raceArr = Array.isArray(parsedResults.race) ? parsedResults.race : (Array.isArray(parsedResults.Race) ? parsedResults.Race : []);
-        const qualifArr = Array.isArray(parsedResults.qualif) ? parsedResults.qualif : (Array.isArray(parsedResults.Qualif) ? parsedResults.Qualif : []);
-
-        const posObj = raceArr.find((r: any) => (r.Name ?? r.name) === driver);
+      races.forEach((race: typeof Races[number], raceIdx: number) => {
         let pts = 0;
-        const pos = posObj?.Position ?? posObj?.position;
         let qualifPts = 0;
         let bestLapBonus = 0;
-
-        const qualifObj = qualifArr.find((q: any) => (q.Name ?? q.name) === driver);
-        const qualifPos = qualifObj?.Position ?? qualifObj?.position;
-        if (qualifObj && typeof qualifPos === "number" && qualifPos >= 1 && qualifPos <= POINTS_PER_QUALIF.length) {
+        // Find race result for this driver
+        const raceResult = race.raceResults?.find((r: { driver: string }) => r.driver === driverName);
+        const qualifResult = race.qualifResults?.find((q: { driver: string }) => q.driver === driverName);
+        const pos = raceResult?.position;
+        const qualifPos = qualifResult?.position;
+        if (qualifResult && typeof qualifPos === "number" && qualifPos >= 1 && qualifPos <= POINTS_PER_QUALIF.length) {
           qualifPts = POINTS_PER_QUALIF[qualifPos - 1] ?? 0;
         }
-
+        // Best lap bonus
         let bestLapValue = null;
-        if (raceArr.length > 0) {
-          bestLapValue = raceArr.reduce((best: string|null, curr: any) => {
+        if (race.raceResults && race.raceResults.length > 0) {
+          bestLapValue = race.raceResults.reduce((best: string|null, curr: { bestLap: string }) => {
             if (!curr.bestLap) return best;
             if (!best) return curr.bestLap;
             const toMs = (t: string | undefined): number => {
               if (!t) return Infinity;
               const parts = t.split(":");
               if (parts.length === 2) {
-                // Format: MM:SS.sss
                 const [min, sec] = parts;
                 const [s, ms] = sec.split(".");
                 return parseInt(min) * 60000 + parseInt(s) * 1000 + parseInt((ms || '0').padEnd(3, '0'));
               } else if (parts.length === 1) {
-                // Format: SS.sss (moins d'une minute)
                 const [s, ms] = t.split(".");
                 return parseInt(s) * 1000 + parseInt((ms || '0').padEnd(3, '0'));
               }
@@ -108,127 +80,119 @@ export const Standing = () => {
           }, null);
         }
         if (bestLapValue) {
-          const bestLapDriver = raceArr.find((r: any) => r.bestLap === bestLapValue);
-          if (bestLapDriver && (bestLapDriver.Name ?? bestLapDriver.name) === driver) {
+          const bestLapDriver = race.raceResults?.find((r: { bestLap: string, driver: string }) => r.bestLap === bestLapValue);
+          if (bestLapDriver && bestLapDriver.driver === driverName) {
             bestLapBonus = 1;
           }
         }
-
-        if (posObj && typeof pos === "number") {
+        if (raceResult && typeof pos === "number") {
           const idx = pos - 1;
           pts = POINTS_PER_POSITION[idx] ?? 0;
         }
-
         let displayValue = "-";
-        if (posObj) {
+        if (raceResult) {
           if (typeof pos === "number") {
             if (pos >= 1 && pos <= POINTS_PER_POSITION.length) {
-              // Normal points
               displayValue = pts + qualifPts + bestLapBonus > 0 ? String(pts + qualifPts + bestLapBonus) : "-";
             } else if (pos > POINTS_PER_POSITION.length) {
-              // Present but beyond 20th place
               displayValue = "0";
             }
           } else {
-            // Present but no valid position
             displayValue = "0";
           }
         } else {
-          // Not present in race
           displayValue = "-";
         }
-
         const totalPoints = pts + qualifPts + bestLapBonus;
         pointsByRace[`race_${race.id}`] = displayValue;
-        pointsArray.push({ key: `race_${race.id}`, value: typeof displayValue === 'number' ? displayValue : totalPoints, raceIdx });
-
+        // Ajout pour la projection :
+        // Si la course a été disputée (race.raceResults non vide) mais que le pilote n'a pas roulé, on compte 0 pour la projection
+        if (race.raceResults && race.raceResults.length > 0) {
+          if (raceResult) {
+            pointsArray.push({ key: `race_${race.id}`, value: totalPoints, raceIdx });
+          } else {
+            // Course disputée mais pas de résultat pour ce pilote : 0 pour la projection
+            pointsArray.push({ key: `race_${race.id}`, value: 0, raceIdx });
+          }
+        }
+        // Si la course n'a pas été disputée (race.raceResults vide), on ne compte rien
       });
-
       const bestResults = pointsArray
         .filter((p) => typeof p.value === 'number' && p.value > 0)
         .sort((a, b) => b.value - a.value)
         .slice(0, RACE_COUNT);
       const bestKeys = new Set(bestResults.map((p) => p.key));
       const total = bestResults.reduce((acc, p) => acc + p.value, 0);
+
+      // Projection : tant qu'on n'a pas 6 résultats, on affiche la somme des meilleurs (RACE_COUNT-1) résultats (on retire le plus mauvais)
+      let projection: number | null = null;
+      if (pointsArray.length > 1 && pointsArray.length <= RACE_COUNT) {
+        const values = pointsArray.map((p) => p.value);
+        projection = values.reduce((acc, v) => acc + v, 0) - Math.min(...values);
+      }
+
       return {
-        name: driver,
-        team: driverTeamMap.get(driver) && driverTeamMap.get(driver)?.trim() !== "" ? driverTeamMap.get(driver) : "-",
+        name: driverName,
+        team,
         ...pointsByRace,
         total,
+        projection,
         _bestKeys: bestKeys,
       };
     });
 
     const teamRacePoints: Record<string, { team: string, key: string, value: number, raceIdx: number }[]> = {};
-    races.forEach((race: any, raceIdx: number) => {
-      let parsedResults: any = {};
-      if (race?.results) {
-        if (typeof race.results === "string") {
-          try {
-            parsedResults = JSON.parse(race.results);
-          } catch (e) {
-            parsedResults = {};
-          }
-        } else {
-          parsedResults = race.results;
-        }
-      }
-      const raceArr = Array.isArray(parsedResults.race) ? parsedResults.race : (Array.isArray(parsedResults.Race) ? parsedResults.Race : []);
+    races.forEach((race: typeof Races[number], raceIdx: number) => {
       const teamToPoints: Record<string, number[]> = {};
-      raceArr.forEach((r: any) => {
-        const name = r.Name ?? r.name;
-        const team = driverTeamMap.get(name);
-        if (team && team.trim() !== "") {
-          let pts = 0;
-          const pos = r.Position ?? r.position;
-          if (typeof pos === "number") {
-            const idx = pos - 1;
-            pts = POINTS_PER_POSITION[idx] ?? 0;
-          }
-          let qualifPts = 0;
-          const qualifArr = Array.isArray(parsedResults.qualif) ? parsedResults.qualif : (Array.isArray(parsedResults.Qualif) ? parsedResults.Qualif : []);
-          const qualifObj = qualifArr.find((q: any) => (q.Name ?? q.name) === name);
-          const qualifPos = qualifObj?.Position ?? qualifObj?.position;
-          if (qualifObj && typeof qualifPos === "number" && qualifPos >= 1 && qualifPos <= POINTS_PER_QUALIF.length) {
-            qualifPts = POINTS_PER_QUALIF[qualifPos - 1] ?? 0;
-          }
-          let bestLapBonus = 0;
-          let bestLapValue = null;
-          if (raceArr.length > 0) {
-            bestLapValue = raceArr.reduce((best: string|null, curr: any) => {
-              if (!curr.bestLap) return best;
-              if (!best) return curr.bestLap;
-              const toMs = (t: string | undefined): number => {
-                if (!t) return Infinity;
-                const parts = t.split(":");
-                if (parts.length === 2) {
-                  // Format: MM:SS.sss
-                  const [min, sec] = parts;
-                  const [s, ms] = sec.split(".");
-                  return parseInt(min) * 60000 + parseInt(s) * 1000 + parseInt((ms || '0').padEnd(3, '0'));
-                } else if (parts.length === 1) {
-                  // Format: SS.sss (moins d'une minute)
-                  const [s, ms] = t.split(".");
-                  return parseInt(s) * 1000 + parseInt((ms || '0').padEnd(3, '0'));
-                }
-                return Infinity;
-              };
-              return toMs(curr.bestLap) < toMs(best) ? curr.bestLap : best;
-            }, null);
-          }
-          if (bestLapValue) {
-            const bestLapDriver = raceArr.find((r2: any) => r2.bestLap === bestLapValue);
-            if (bestLapDriver && (bestLapDriver.Name ?? bestLapDriver.name) === name) {
-              bestLapBonus = 1;
-            }
-          }
-          const totalPoints = pts + qualifPts + bestLapBonus;
-          const teams = team.split('/').map(t => t.trim()).filter(t => t !== "");
-          teams.forEach(singleTeam => {
-            if (!teamToPoints[singleTeam]) teamToPoints[singleTeam] = [];
-            teamToPoints[singleTeam].push(totalPoints);
-          });
+      (race.raceResults || []).forEach((r: { driver: string; position: number; bestLap: string }) => {
+        const driver = Drivers.find((d: Driver) => d.name === r.driver);
+        if (!driver) return;
+        const teams = (driver.team || []) as string[];
+        let pts = 0;
+        const pos = r.position;
+        if (typeof pos === "number") {
+          const idx = pos - 1;
+          pts = POINTS_PER_POSITION[idx] ?? 0;
         }
+        let qualifPts = 0;
+        const qualifResult = (race.qualifResults || []).find((q: { driver: string; position: number }) => q.driver === r.driver);
+        const qualifPos = qualifResult?.position;
+        if (qualifResult && typeof qualifPos === "number" && qualifPos >= 1 && qualifPos <= POINTS_PER_QUALIF.length) {
+          qualifPts = POINTS_PER_QUALIF[qualifPos - 1] ?? 0;
+        }
+        let bestLapBonus = 0;
+        let bestLapValue = null;
+        if (race.raceResults && race.raceResults.length > 0) {
+          bestLapValue = race.raceResults.reduce((best: string|null, curr: { bestLap: string }) => {
+            if (!curr.bestLap) return best;
+            if (!best) return curr.bestLap;
+            const toMs = (t: string | undefined): number => {
+              if (!t) return Infinity;
+              const parts = t.split(":");
+              if (parts.length === 2) {
+                const [min, sec] = parts;
+                const [s, ms] = sec.split(".");
+                return parseInt(min) * 60000 + parseInt(s) * 1000 + parseInt((ms || '0').padEnd(3, '0'));
+              } else if (parts.length === 1) {
+                const [s, ms] = t.split(".");
+                return parseInt(s) * 1000 + parseInt((ms || '0').padEnd(3, '0'));
+              }
+              return Infinity;
+            };
+            return toMs(curr.bestLap) < toMs(best) ? curr.bestLap : best;
+          }, null);
+        }
+        if (bestLapValue) {
+          const bestLapDriver = race.raceResults?.find((r2: { bestLap: string; driver: string }) => r2.bestLap === bestLapValue);
+          if (bestLapDriver && bestLapDriver.driver === r.driver) {
+            bestLapBonus = 1;
+          }
+        }
+        const totalPoints = pts + qualifPts + bestLapBonus;
+        teams.forEach((singleTeam: string) => {
+          if (!teamToPoints[singleTeam]) teamToPoints[singleTeam] = [];
+          teamToPoints[singleTeam].push(totalPoints);
+        });
       });
       Object.entries(teamToPoints).forEach(([team, arr]) => {
         const avg = arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
@@ -238,18 +202,34 @@ export const Standing = () => {
     });
 
     const teamRows = Object.entries(teamRacePoints).map(([team, arr]) => {
-      const bestResults = arr
+      // Pour chaque course disputée, si l'équipe n'a pas de résultat, on ajoute 0
+      const allRaceKeys = (raceColumns || []).filter(rc => {
+        const race = races.find(r => `race_${r.id}` === rc.key);
+        return race && race.raceResults && race.raceResults.length > 0;
+      }).map(rc => rc.key);
+
+      // Map des résultats de l'équipe par course
+      const arrByKey = Object.fromEntries(arr.map(p => [p.key, p]));
+      const fullArr = allRaceKeys.map(key => arrByKey[key] ? arrByKey[key] : { key, value: 0 });
+
+      const bestResults = fullArr
         .filter((p) => typeof p.value === 'number' && p.value > 0)
         .sort((a, b) => b.value - a.value)
-        .slice(0, 4);
+        .slice(0, RACE_COUNT);
       const bestKeys = new Set(bestResults.map((p) => p.key));
       const total = bestResults.reduce((acc, p) => acc + p.value, 0);
+      // Projection : somme des meilleurs (RACE_COUNT-1) résultats (on retire le plus mauvais)
+      let projection: number | null = null;
+      if (fullArr.length > 1 && fullArr.length <= RACE_COUNT) {
+        const values = fullArr.map((p) => p.value);
+        projection = values.reduce((acc, v) => acc + v, 0) - Math.min(...values);
+      }
       const pointsByRace: Record<string, number | string> = {};
       // Initialiser toutes les colonnes à '-'
       (raceColumns || []).forEach(col => {
         pointsByRace[col.key] = "-";
       });
-      arr.forEach((p) => {
+      fullArr.forEach((p) => {
         if (p.value === undefined || p.value === null) {
           pointsByRace[p.key] = "-";
         } else if (p.value >= 0) {
@@ -262,6 +242,7 @@ export const Standing = () => {
         team,
         ...pointsByRace,
         total: total.toFixed(2),
+        projection: projection !== null ? projection.toFixed(2) : null,
         _bestKeys: bestKeys,
       };
     });
@@ -270,11 +251,11 @@ export const Standing = () => {
   }, [races]);
 
   const driverColumns: Column<any>[] = [
-    { key: "position", label: "#", align: "left" },
-    { key: "name", label: "Driver", align: "left" },
-    { key: "team", label: "Team", align: "center" },
+    { key: "name", label: "Driver", align: "left", sortable: true },
+    { key: "team", label: "Team", align: "center", sortable: true },
     ...((standings.raceColumns || []).map((col) => ({
       ...col,
+      sortable: true,
       render: (row: any) => {
         const value = row[col.key];
         if (row._bestKeys && row._bestKeys.has(col.key) && value !== "-") {
@@ -283,14 +264,27 @@ export const Standing = () => {
         return value;
       },
     }))),
-    { key: "total", label: "Total", align: "center" },
+    // Colonne projection discrète juste avant le total
+    {
+      key: "projection",
+      label: "Proj.",
+      align: "center",
+      title: "Projection if we drop the worst result",
+      width: "5%",
+      sortable: true,
+      render: (row: any) =>
+        typeof row.projection === 'number' ? (
+          <span title="Projection si on retire le plus mauvais résultat" >{row.projection}</span>
+        ) : null,
+    },
+    { key: "total", label: "Total", align: "center", sortable: true },
   ];
 
   const teamColumns: Column<any>[] = [
-    { key: "position", label: "#", align: "left" },
-    { key: "team", label: "Team", align: "left" },
+    { key: "team", label: "Team", align: "left", sortable: true },
     ...((standings.raceColumns || []).map((col) => ({
       ...col,
+      sortable: true,
       render: (row: any) => {
         const value = row[col.key];
         if (row._bestKeys && row._bestKeys.has(col.key) && value !== "-") {
@@ -299,11 +293,22 @@ export const Standing = () => {
         return value;
       },
     }))),
-    { key: "total", label: "Total", align: "center" },
+    {
+      key: "projection",
+      label: "Proj.",
+      align: "center",
+      title: "Projection if we drop the worst result",
+      width: "5%",
+      sortable: true,
+      render: (row: any) =>
+        typeof row.projection === 'string' ? (
+          <span title="Projection si on retire le plus mauvais résultat" >{row.projection}</span>
+        ) : null,
+    },
+    { key: "total", label: "Total", align: "center", sortable: true },
   ];
 
-  if (loading) return <div>Loading…</div>;
-  if (error) return <div>Error: {error.message || error.toString()}</div>;
+  // No loading/error with static data
   if (!standings.driverRows?.length) return <div>No data found.</div>;
 
   const sortedDriverRows = [...standings.driverRows]
