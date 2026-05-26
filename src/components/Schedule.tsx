@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "../common/Card";
 import { useEffect, useState } from "react";
-import { Races, Drivers } from "../api/Data";
+import { Races } from "../api/Data";
 
 export const Schedule = () => {
   const navigate = useNavigate();
