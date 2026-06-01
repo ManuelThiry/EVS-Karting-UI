@@ -168,27 +168,37 @@ export const Races: Race[] = [
     name: "RACB Karting Spa-Francorchamps",
     address: "Rte de l' Eau Rouge 51, 4970 Stavelot",
     distance: "1.0 km",
-    imageUrl: "https://www.francorchamps-karting.be/images/site/2024121814_1734530354e2.jpg"
+    imageUrl: "https://www.francorchamps-karting.be/images/site/2024121814_1734530354e2.jpg",
+    contact: "Manuel Thiry (MATH)",
+    date: new Date("2026-07-01 19:00"),
+    format: "Q: 10min, R: 20min",
+    price: 65,
+    drivers: ["THIRY", "MAUDOUX", "MAWET"]
   },
   {
     id: 4,
+    name: "RACB Karting Spa-Francorchamps",
+    address: "Rte de l' Eau Rouge 51, 4970 Stavelot",
+    distance: "1.0 km",
+    imageUrl: "https://www.francorchamps-karting.be/images/site/2024121814_1734530354e2.jpg",
+    contact: "Manuel Thiry (MATH)",
+    date: new Date("2026-07-01 19:30"),
+    format: "R: 30min",
+    price: 35,
+    drivers: ["THIRY", "MAUDOUX"]
+  },
+  {
+    id: 5,
     name: "Karting des Fagnes",
     address: "Rue du Karting 13, 5660 Couvin",
     distance: "1.3 km",
     imageUrl: "https://www.lavenir.net/resizer/v2/AVCT2F553ZEFJEXQ3SEYOQRKN4.jpg?auth=0b9be8d04b9e73a078e70838860f29bc40f18b1287b72d0af458d09e9fa95987&width=1620&height=1085&quality=85&focal=512%2C343"
   },
   {
-    id: 5,
+    id: 6,
     name: "Hurricane Dolhain Karting",
     address: "Av. Reine Astrid 97/A, 4831 Limbourg",
     distance: "600 m",
     imageUrl: "https://i.pinimg.com/564x/90/7c/2f/907c2f8ecc87c1688948ed0dee503761.jpg"
   },
-  {
-    id: 6,
-    name: "Karting de Bastogne",
-    address: "Rue de la Gare 1, 6600 Bastogne",
-    distance: "1.2 km",
-    imageUrl: "https://www.kartingdebastogne.be/images/site/2024121814_1734530354e2.jpg"
-  }
 ]			
