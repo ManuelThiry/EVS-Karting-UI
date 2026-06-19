@@ -15,7 +15,7 @@ export const Drivers: Driver[] = [
   { id: 'JACOBS', name: "Pierre JACOBS", team: ["LSMVIA"] },
   { id: 'BOILEAU', name: "Quentin BOILEAU", team: ["LSMVIA"] },
   { id: 'PETERS', name: "Loic PETERS", team: ["LSMVIA"] },
-  { id: 'GIARUSSO', name: "Florian GIARUSSO", team: ["System Test"] },
+  { id: 'GIARRUSSO', name: "Florian GIARRUSSO", team: ["System Test"] },
   { id: 'WYZEN', name: "Mathieu WYZEN", team: ["Enrich"] },
   { id: 'VINCENT', name: "Nicolas VINCENT", team: ["Support"] },
   { id: 'VAN EYLEN', name: "Quentin VAN EYLEN", team: ["PGT"] },
@@ -29,7 +29,11 @@ export const Drivers: Driver[] = [
   { id: 'LAMALLE', name: "Noa LAMALLE", team: ["Ext."] },
   { id: 'SANFILIPPO', name: "Ugo SANFILIPPO", team: ["Enrich"] },
   { id: 'ARNOULD', name: "Ayrton ARNOULD", team: ["A7 Core"] },
-  { id: 'BALANDJIN', name: "Alexandre BALANDJIN", team: ["Ext."] }
+  { id: 'BALANDJIN', name: "Alexandre BALANDJIN", team: ["Ext."] },
+  { id: 'MAGHE', name: "Alexandre MAGHE", team: ["?"] },
+  { id: 'CAHAY', name: "Olivier CAHAY", team: ["?"] },
+  { id: 'PIRENNE', name: "Romain PIRENNE", team: ["?"] },
+  { id: 'PANAHBEKHODA', name: "Emad PANAHBEKHODA", team: ["?"] },
 ];
 
 export type Race = {
@@ -71,7 +75,7 @@ export const Races: Race[] = [
     date: new Date("2026-01-15 20:00"),
     format: "Q: 6min, R: 30min",
     price: 56,
-    drivers: ["THIRY", "BECKERS", "MAUDOUX", "MIGNOLET", "MARECHAL", "HUYGHEBAERT", "MAHIAT", "JACOBS", "BOILEAU", "PETERS", "GIARUSSO", "WYZEN", "VINCENT", "VAN EYLEN", "HARDY", "PREUDHOMME", "SCHAAL", "MAWET", "HUTSEMAIKERS", "VERHEUGE", "ATIF"],
+    drivers: ["THIRY", "BECKERS", "MAUDOUX", "MIGNOLET", "MARECHAL", "HUYGHEBAERT", "MAHIAT", "JACOBS", "BOILEAU", "PETERS", "GIARRUSSO", "WYZEN", "VINCENT", "VAN EYLEN", "HARDY", "PREUDHOMME", "SCHAAL", "MAWET", "HUTSEMAIKERS", "VERHEUGE", "ATIF"],
     qualifResults: [
       {position:1, driver:"Manuel THIRY", time:"1:02.995"},
       {position:2, driver:"Cyril HARDY", time:"1:03.203"},
@@ -88,7 +92,7 @@ export const Races: Race[] = [
       {position:13, driver:"Pierre JACOBS", time:"1:08.575"},
       {position:14, driver:"Yannis ATIF", time:"1:08.682"},
       {position:15, driver:"Nicolas VINCENT", time:"1:08.984"},
-      {position:16, driver:"Florian GIARUSSO", time:"1:09.441"},
+      {position:16, driver:"Florian GIARRUSSO", time:"1:09.441"},
       {position:17, driver:"Quentin VAN EYLEN", time:"1:09.472"},
       {position:18, driver:"Maxime BECKERS", time:"1:10.494"},
       {position:19, driver:"Aubry HUYGHEBAERT", time:"1:11.636"},
@@ -114,7 +118,7 @@ export const Races: Race[] = [
       {position: 16, driver: "Yannis ATIF", gap: "2 Laps", bestLap: "1:07.123"},
       {position: 17, driver: "Jeremy MAHIAT", gap: "2 Laps", bestLap: "1:07.223"},
       {position: 18, driver: "Nicolas VINCENT", gap: "3 Laps", bestLap: "1:07.626"},
-      {position: 19, driver: "Florian GIARUSSO", gap: "3 Laps", bestLap: "1:08.280"},
+      {position: 19, driver: "Florian GIARRUSSO", gap: "3 Laps", bestLap: "1:08.280"},
       {position: 20, driver: "Arnaud SCHAAL", gap: "3 Laps", bestLap: "1:08.626"},
       {position: 21, driver: "Mathieu WYZEN", gap: "4 Laps", bestLap: "1:13.238"}
     ]
@@ -172,8 +176,8 @@ export const Races: Race[] = [
     contact: "Manuel Thiry (MATH)",
     date: new Date("2026-07-01 19:00"),
     format: "Q: 10min, R: 20min",
-    price: 65,
-    drivers: ["THIRY", "MAUDOUX", "MAWET"]
+    price: 58.5,
+    drivers: ["THIRY", "MAUDOUX", "MAWET", "BECKERS", "GIARRUSSO", "MAGHE", "VINCENT", "HARDY", "CAHAY", "PIRENNE", "PANAHBEKHODA", "VAN EYLEN"]
   },
   {
     id: 4,
@@ -184,8 +188,8 @@ export const Races: Race[] = [
     contact: "Manuel Thiry (MATH)",
     date: new Date("2026-07-01 19:30"),
     format: "R: 30min",
-    price: 35,
-    drivers: ["THIRY", "MAUDOUX"]
+    price: 31.5,
+    drivers: ["THIRY", "MAUDOUX", "BECKERS", "GIARRUSSO", "MAGHE", "VINCENT", "HARDY", "VAN EYLEN"]
   },
   {
     id: 5,
@@ -201,4 +205,4 @@ export const Races: Race[] = [
     distance: "600 m",
     imageUrl: "https://i.pinimg.com/564x/90/7c/2f/907c2f8ecc87c1688948ed0dee503761.jpg"
   },
-]			
+]
