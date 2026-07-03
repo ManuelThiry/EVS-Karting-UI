@@ -30,7 +30,7 @@ export const Results: React.FC = () => {
         position: item.position,
         name: item.driver,
         team: getTeam(item.driver),
-        gap: item.gap,
+        gap: item.gap ? `+${item.gap}` : "",
         bestLap: item.bestLap,
       }))
     : [];

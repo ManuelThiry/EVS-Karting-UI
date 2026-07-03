@@ -8,7 +8,9 @@ import type { Driver } from "../api/Data";
 
 export const POINTS_PER_POSITION = [25, 22, 20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
 export const POINTS_PER_QUALIF = [4, 3, 2, 1];
-export const RACE_COUNT =  5;
+export const POINTS_FOR_BEST_LAP = 1;
+export const RACE_COUNT =  6;
+export const RACE_THAT_COUNT =  4;
 
 export const Standing = () => {
   const races = Races;
@@ -54,7 +56,7 @@ export const Standing = () => {
         const qualifResult = race.qualifResults?.find((q: { driver: string }) => q.driver === driverName);
         const pos = raceResult?.position;
         const qualifPos = qualifResult?.position;
-        if (qualifResult && typeof qualifPos === "number" && qualifPos >= 1 && qualifPos <= POINTS_PER_QUALIF.length) {
+        if (qualifResult && typeof qualifPos === "number" && qualifPos >= 1 && qualifPos <= POINTS_PER_QUALIF.length && race.removeQualifPoints !== true) {
           qualifPts = POINTS_PER_QUALIF[qualifPos - 1] ?? 0;
         }
         // Best lap bonus
@@ -82,7 +84,7 @@ export const Standing = () => {
         if (bestLapValue) {
           const bestLapDriver = race.raceResults?.find((r: { bestLap: string, driver: string }) => r.bestLap === bestLapValue);
           if (bestLapDriver && bestLapDriver.driver === driverName) {
-            bestLapBonus = 1;
+            bestLapBonus = POINTS_FOR_BEST_LAP;
           }
         }
         if (raceResult && typeof pos === "number") {
@@ -126,10 +128,15 @@ export const Standing = () => {
 
       // Projection : tant qu'on n'a pas 6 résultats, on affiche la somme des meilleurs (RACE_COUNT-1) résultats (on retire le plus mauvais)
       let projection: number | null = null;
-      if (pointsArray.length > 1 && pointsArray.length <= RACE_COUNT) {
-        const values = pointsArray.map((p) => p.value);
-        projection = values.reduce((acc, v) => acc + v, 0) - Math.min(...values);
-      }
+     if (pointsArray.length >= (RACE_COUNT - RACE_THAT_COUNT)) {
+    const values = pointsArray
+        .map(p => p.value)
+        .sort((a, b) => a - b);
+
+    projection = values
+        .slice(RACE_COUNT - RACE_THAT_COUNT)          // on enlève les 2 plus petits
+        .reduce((a, b) => a + b, 0);
+}
 
       return {
         name: driverName,
@@ -157,7 +164,7 @@ export const Standing = () => {
         let qualifPts = 0;
         const qualifResult = (race.qualifResults || []).find((q: { driver: string; position: number }) => q.driver === r.driver);
         const qualifPos = qualifResult?.position;
-        if (qualifResult && typeof qualifPos === "number" && qualifPos >= 1 && qualifPos <= POINTS_PER_QUALIF.length) {
+        if (qualifResult && typeof qualifPos === "number" && qualifPos >= 1 && qualifPos <= POINTS_PER_QUALIF.length && race.removeQualifPoints !== true) {
           qualifPts = POINTS_PER_QUALIF[qualifPos - 1] ?? 0;
         }
         let bestLapBonus = 0;
@@ -185,7 +192,7 @@ export const Standing = () => {
         if (bestLapValue) {
           const bestLapDriver = race.raceResults?.find((r2: { bestLap: string; driver: string }) => r2.bestLap === bestLapValue);
           if (bestLapDriver && bestLapDriver.driver === r.driver) {
-            bestLapBonus = 1;
+            bestLapBonus = POINTS_FOR_BEST_LAP;
           }
         }
         const totalPoints = pts + qualifPts + bestLapBonus;
@@ -220,10 +227,15 @@ export const Standing = () => {
       const total = bestResults.reduce((acc, p) => acc + p.value, 0);
       // Projection : somme des meilleurs (RACE_COUNT-1) résultats (on retire le plus mauvais)
       let projection: number | null = null;
-      if (fullArr.length > 1 && fullArr.length <= RACE_COUNT) {
-        const values = fullArr.map((p) => p.value);
-        projection = values.reduce((acc, v) => acc + v, 0) - Math.min(...values);
-      }
+    if (fullArr.length >= (RACE_COUNT - RACE_THAT_COUNT)) {
+    const values = fullArr
+        .map(p => p.value)
+        .sort((a, b) => a - b);
+
+    projection = values
+        .slice(RACE_COUNT - RACE_THAT_COUNT)          // on enlève les 2 plus petits
+        .reduce((a, b) => a + b, 0);
+}
       const pointsByRace: Record<string, number | string> = {};
       // Initialiser toutes les colonnes à '-'
       (raceColumns || []).forEach(col => {
@@ -353,7 +365,7 @@ export const Standing = () => {
                 <Tooltip content={
                   <div>
                     <b className="text-[#009FE3]">Scoring rules</b><br />
-                    <span>The total is the sum of each driver's <b>{RACE_COUNT} best performances</b> (race + qualifying + fastest lap).</span><br /><br />
+                    <span>The total is the sum of each driver's <b>{RACE_THAT_COUNT} best performances</b> (race + qualifying + fastest lap).</span><br /><br />
                     <b className="text-[#009FE3]">Points per race position:</b><br />
                     <span className="block mb-1">{POINTS_PER_POSITION.map((p, i) => `${i+1}: ${p}`).join(' | ')}</span>
                     <b className="text-[#009FE3]">Points per qualifying position:</b><br />
@@ -381,7 +393,7 @@ export const Standing = () => {
                 <Tooltip content={
                   <div>
                     <b className="text-[#009FE3]">Scoring rules</b><br />
-                    <span>The total is the sum of the team's <b>{RACE_COUNT} best averages per race</b> (average of the team's drivers' points for each race).</span><br /><br />
+                    <span>The total is the sum of the team's <b>{RACE_THAT_COUNT} best averages per race</b> (average of the team's drivers' points for each race).</span><br /><br />
                     <b className="text-[#009FE3]">Points per race position:</b><br />
                     <span className="block mb-1">{POINTS_PER_POSITION.map((p, i) => `${i+1}: ${p}`).join(' | ')}</span>
                     <b className="text-[#009FE3]">Points per qualifying position:</b><br />

@@ -34,6 +34,15 @@ export const Drivers: Driver[] = [
   { id: 'CAHAY', name: "Olivier CAHAY", team: ["?"] },
   { id: 'PIRENNE', name: "Romain PIRENNE", team: ["?"] },
   { id: 'PANAHBEKHODA', name: "Emad PANAHBEKHODA", team: ["?"] },
+  { id: 'REDFERN', name: "Alex REDFERN", team: ["Leadership Team"] },
+  { id: 'LAIRD', name: "Ray LAIRD", team: ["Ext."] },
+  { id: 'MATHIEU', name: "Noah MATHIEU", team: ["Ext."] },
+  { id: 'HAUSMANNE', name: "Jack HAUSMANNE", team: ["?"] },
+  { id: 'TOMASELLO', name: "Salvatore TOMASELLO", team: ["Ext."] },
+  { id: 'RIGO', name: "Sandro RIGO", team: ["Ext."] },
+  { id: 'HAUSMANNE2', name: "John HAUSMANNE", team: ["Ext."] },
+  { id: 'ALTOINE', name: "Antoine", team: ["Ext."] },
+  { id: 'THIRY2', name: "Cedric THIRY", team: ["Ext."] },
 ];
 
 export type Race = {
@@ -49,12 +58,13 @@ export type Race = {
   drivers?: string[];
   qualifResults?: QualifResult[];
   raceResults?: RaceResult[];
+  removeQualifPoints?: boolean;
 };
 
 export type QualifResult = {
   position: number;
   driver: string;
-  time: string;
+  time?: string;
 }
 
 export type RaceResult = {
@@ -177,7 +187,55 @@ export const Races: Race[] = [
     date: new Date("2026-07-01 19:00"),
     format: "Q: 10min, R: 20min",
     price: 58.5,
-    drivers: ["THIRY", "MAUDOUX", "MAWET", "BECKERS", "GIARRUSSO", "MAGHE", "VINCENT", "HARDY", "CAHAY", "PIRENNE", "PANAHBEKHODA", "VAN EYLEN"]
+    drivers: ["THIRY", "MAUDOUX", "MAWET", "BECKERS", "GIARRUSSO", "MAGHE", "VINCENT", "HARDY", "CAHAY", "PIRENNE", "PANAHBEKHODA", "VAN EYLEN", "REDFERN", "LAIRD", "MATHIEU", "HUTSEMAIKERS", "HAUSMANNE", "TOMASELLO", "RIGO", "HAUSMANNE2", "ALTOINE", "THIRY2"],
+    qualifResults: [
+      {position: 1, driver: "Cyril HARDY", time: "59.813"},
+      {position: 2, driver: "Manuel THIRY", time: "1:00.144"},
+      {position: 3, driver: "Noah MATHIEU", time: "1:00.209"},
+      {position: 4, driver: "John HAUSMANNE", time: "1:00.483"},
+      {position: 5, driver: "Olivier CAHAY", time: "1:00.530"},
+      {position: 6, driver: "Romain PIRENNE", time: "1:00.797"},
+      {position: 7, driver: "Xavier MAWET", time: "1:00.937"},
+      {position: 8, driver: "Alex REDFERN", time: "1:01.432"},
+      {position: 9, driver: "Simon MAUDOUX", time: "1:01.886"},
+      {position: 10, driver: "Michael HUTSEMAIKERS", time: "1:01.901"},
+      {position: 11, driver: "Quentin VAN EYLEN", time: "1:02.549"},
+      {position: 12, driver: "Cedric THIRY", time: "1:02.598"},
+      {position: 13, driver: "Jack HAUSMANNE", time: "1:02.789"},
+      {position: 14, driver: "Maxime BECKERS", time: "1:03.047"},
+      {position: 15, driver: "Antoine", time: "1:03.086"},
+      {position: 16, driver: "Nicolas VINCENT", time: "1:03.790"},
+      {position: 17, driver: "Florian GIARRUSSO", time: "1:03.797"},
+      {position: 18, driver: "Sandro RIGO", time: "1:03.864"},
+      {position: 19, driver: "Ray LAIRD", time: "1:04.303"},
+      {position: 20, driver: "Salvatore TOMASELLO", time: "1:04.514"},
+      {position: 21, driver: "Alexandre MAGHE", time: "1:05.043"},
+      {position: 22, driver: "Emad PANAHBEKHODA", time: "1:11.317"},
+    ],
+    raceResults: [
+      {position: 1, driver: "Cyril HARDY", gap: "", bestLap: "59.366"},
+      {position: 2, driver: "Noah MATHIEU", gap: "0.103", bestLap: "59.465"},
+      {position: 3, driver: "Manuel THIRY", gap: "2.740", bestLap: "59.449"},
+      {position: 4, driver: "Xavier MAWET", gap: "13.731", bestLap: "59.671"},
+      {position: 5, driver: "John HAUSMANNE", gap: "20.035", bestLap: "59.770"},
+      {position: 6, driver: "Alex REDFERN", gap: "21.243", bestLap: "1:00.013"},
+      {position: 7, driver: "Olivier CAHAY", gap: "24.863", bestLap: "1:00.335"},
+      {position: 8, driver: "Romain PIRENNE", gap: "29.569", bestLap: "1:00.505"},
+      {position: 9, driver: "Michael HUTSEMAIKERS", gap: "31.603", bestLap: "1:00.796"},
+      {position: 10, driver: "Simon MAUDOUX", gap: "45.642", bestLap: "1:00.486"},
+      {position: 11, driver: "Cedric THIRY", gap: "48.102", bestLap: "1:01.264"},
+      {position: 12, driver: "Jack HAUSMANNE", gap: "48.393", bestLap: "1:01.113"},
+      {position: 13, driver: "Quentin VAN EYLEN", gap: "1 Laps", bestLap: "1:01.691"},
+      {position: 14, driver: "Antoine", gap: "1 Laps", bestLap: "1:01.903"},
+      {position: 15, driver: "Maxime BECKERS", gap: "1 Laps", bestLap: "1:01.568"},
+      {position: 16, driver: "Salvatore TOMASELLO", gap: "1 Laps", bestLap: "1:02.423"},
+      {position: 17, driver: "Florian GIARRUSSO", gap: "1 Laps", bestLap: "1:03.003"},
+      {position: 18, driver: "Sandro RIGO", gap: "1 Laps", bestLap: "1:02.661"},
+      {position: 19, driver: "Nicolas VINCENT", gap: "1 Laps", bestLap: "1:03.293"},
+      {position: 20, driver: "Alexandre MAGHE", gap: "3 Laps", bestLap: "1:02.180"},
+      {position: 21, driver: "Ray LAIRD", gap: "3 Laps", bestLap: "1:03.180"},
+      {position: 22, driver: "Emad PANAHBEKHODA", gap: "4 Laps", bestLap: "1:09.322"},
+    ]
   },
   {
     id: 4,
@@ -189,20 +247,55 @@ export const Races: Race[] = [
     date: new Date("2026-07-01 19:30"),
     format: "R: 30min",
     price: 31.5,
-    drivers: ["THIRY", "MAUDOUX", "BECKERS", "GIARRUSSO", "MAGHE", "VINCENT", "HARDY", "VAN EYLEN"]
+    drivers: ["THIRY", "MAUDOUX", "BECKERS", "MAGHE", "VINCENT", "HARDY", "VAN EYLEN", "REDFERN", "LAIRD", "MATHIEU", "HAUSMANNE", "TOMASELLO", "HAUSMANNE2", "ALTOINE", "RIGO"],
+    qualifResults: [
+      {position: 1, driver: "Ray LAIRD"},
+      {position: 2, driver: "Alexandre MAGHE"},
+      {position: 3, driver: "Nicolas VINCENT"},
+      {position: 4, driver: "Sandro RIGO"},
+      {position: 5, driver: "Salvatore TOMASELLO"},
+      {position: 6, driver: "Maxime BECKERS"},
+      {position: 7, driver: "Quentin VAN EYLEN"},
+      {position: 8, driver: "Jack HAUSMANNE"},
+      {position: 9, driver: "Simon MAUDOUX"},
+      {position: 10, driver: "Alex REDFERN"},
+      {position: 11, driver: "John HAUSMANNE"},
+      {position: 12, driver: "Manuel THIRY"},
+      {position: 13, driver: "Noah MATHIEU"},
+      {position: 14, driver: "Cyril HARDY"},
+      {position: 15, driver: "Antoine"},
+    ],
+    raceResults: [
+      {position: 1, driver: "Manuel THIRY", gap: "", bestLap: "59.286"},
+      {position: 2, driver: "Noah MATHIEU", gap: "0.201", bestLap: "59.295"},
+      {position: 3, driver: "Cyril HARDY", gap: "3.858", bestLap: "59.361"},
+      {position: 4, driver: "John HAUSMANNE", gap: "31.736", bestLap: "1:00.267"},
+      {position: 5, driver: "Alex REDFERN", gap: "31.914", bestLap: "59.973"},
+      {position: 6, driver: "Simon MAUDOUX", gap: "40.952", bestLap: "1:00.467"},
+      {position: 7, driver: "Jack HAUSMANNE", gap: "1:09.933", bestLap: "1:00.913"},
+      {position: 8, driver: "Quentin VAN EYLEN", gap: "1 Laps", bestLap: "1:01.015"},
+      {position: 9, driver: "Maxime BECKERS", gap: "1 Laps", bestLap: "1:01.279"},
+      {position: 10, driver: "Antoine", gap: "1 Laps", bestLap: "1:01.601"},
+      {position: 11, driver: "Salvatore TOMASELLO", gap: "1 Laps", bestLap: "1:01.925"},
+      {position: 12, driver: "Ray LAIRD", gap: "1 Laps", bestLap: "1:01.948"},
+      {position: 13, driver: "Sandro RIGO", gap: "4 Laps", bestLap: "1:02.342"},
+      {position: 14, driver: "Nicolas VINCENT", gap: "4 Laps", bestLap: "1:03.199"},
+      {position: 15, driver: "Alexandre MAGHE", gap: "13 Laps", bestLap: "1:01.949"},
+    ],
+    removeQualifPoints: true
   },
   {
     id: 5,
-    name: "Karting des Fagnes",
-    address: "Rue du Karting 13, 5660 Couvin",
-    distance: "1.3 km",
-    imageUrl: "https://www.lavenir.net/resizer/v2/AVCT2F553ZEFJEXQ3SEYOQRKN4.jpg?auth=0b9be8d04b9e73a078e70838860f29bc40f18b1287b72d0af458d09e9fa95987&width=1620&height=1085&quality=85&focal=512%2C343"
-  },
-  {
-    id: 6,
     name: "Hurricane Dolhain Karting",
     address: "Av. Reine Astrid 97/A, 4831 Limbourg",
     distance: "600 m",
     imageUrl: "https://i.pinimg.com/564x/90/7c/2f/907c2f8ecc87c1688948ed0dee503761.jpg"
+  },
+   {
+    id: 6,
+    name: "JMKARTING Liège",
+    address: "Rue Winston Churchill 26, 4624 Fléron",
+    distance: "",
+    imageUrl: "https://scontent-bru2-1.xx.fbcdn.net/v/t39.30808-6/737412697_1008142255416916_6167739643988633279_n.jpg?stp=dst-jpg_tt6&cstp=mx1600x1200&ctp=s1600x1200&_nc_cat=100&ccb=1-7&_nc_sid=127cfc&_nc_ohc=XHAGmZ55MzsQ7kNvwFTI4el&_nc_oc=AdqR82nb9CjDwiBWeesXOGrKXashpQvLKPm_FsxiyAXh4GCEDNnjZzqjh5YPk0m1RyY&_nc_zt=23&_nc_ht=scontent-bru2-1.xx&_nc_gid=_bMh7R4xmnaYj3JQdVPnmQ&_nc_ss=7b2a8&oh=00_AQCJ5jesWpkR0h1fPYLlir-3BcLgfuwu6RHoJ5shPDrZuw&oe=6A4DBE85"
   },
 ]
